@@ -22,9 +22,9 @@ fn save_data(records: serde_json::Value) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn export_jsonl(records: serde_json::Value) -> Result<(), String> {
+fn export_jsonl(records: serde_json::Value, path: String) -> Result<(), String> {
     if let Some(array) = records.as_array() {
-        let mut file = fs::File::create("dataset.jsonl")
+        let mut file = fs::File::create(&path)
             .map_err(|e| format!("Failed to create export file: {}", e))?;
         for item in array {
             let item_str = serde_json::to_string(item)
@@ -48,6 +48,7 @@ fn clear_data() -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             load_data,
             save_data,

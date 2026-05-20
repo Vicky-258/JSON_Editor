@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { save } from '@tauri-apps/plugin-dialog';
 import './index.css';
 
 type DatasetRecord = Record<string, string>;
@@ -124,8 +125,17 @@ function App() {
 
   const exportJsonl = async () => {
     try {
-      await invoke('export_jsonl', { records: data });
-      showToast('Exported JSONL successfully!', 'success');
+      const filePath = await save({
+        filters: [{ name: 'JSON Lines', extensions: ['jsonl'] }],
+        defaultPath: 'dataset.jsonl'
+      });
+      
+      if (!filePath) {
+        return; // User cancelled the dialog
+      }
+
+      await invoke('export_jsonl', { records: data, path: filePath });
+      showToast(`Exported successfully to ${filePath.split(/[\/\\]/).pop()}!`, 'success');
     } catch (err) {
       showToast(String(err), 'error');
     }
